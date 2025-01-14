@@ -32,7 +32,11 @@ CREATE TABLE IF NOT EXISTS public.planes (
     vector2_x DOUBLE PRECISION NOT NULL,
     vector2_y DOUBLE PRECISION NOT NULL,
     vector2_z DOUBLE PRECISION NOT NULL,
-    CONSTRAINT fk_plane_model FOREIGN KEY (model_id) REFERENCES public.models(model_id) ON DELETE CASCADE ON UPDATE CASCADE
+    segment1_id INT,
+    segment2_id INT,
+    CONSTRAINT fk_plane_model FOREIGN KEY (model_id) REFERENCES public.models(model_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_segment1 FOREIGN KEY (segment1_id) REFERENCES public.primitives(primitive_id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_segment2 FOREIGN KEY (segment2_id) REFERENCES public.primitives(primitive_id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS public.sketches (
@@ -115,23 +119,41 @@ DECLARE
    vector1_y DOUBLE PRECISION;
    vector2_x DOUBLE PRECISION;
    vector2_y DOUBLE PRECISION;
+   epsilon DOUBLE PRECISION := 0.00001;
 BEGIN
    SELECT vector1_x, vector1_y INTO vector1_x, vector1_y FROM primitives WHERE primitive_id = segment1_id;
    SELECT vector1_x, vector1_y INTO vector2_x, vector2_y FROM primitives WHERE primitive_id = segment2_id;
 
-   RETURN (vector1_x * vector2_x + vector1_y * vector2_y = 0);
+   RETURN ABS(vector1_x * vector2_x + vector1_y * vector2_y) < epsilon;
 END;
 $$
- LANGUAGE plpgsql;
+LANGUAGE plpgsql;
 
-CREATE TABLE IF NOT EXISTS public.plane_bases (
-   plane_id INT NOT NULL PRIMARY KEY, 
-   segment1_id INT NOT NULL, 
-   segment2_id INT NOT NULL, 
-   CONSTRAINT fk_plane FOREIGN KEY (plane_id) REFERENCES public.planes(plane_id) ON DELETE CASCADE ON UPDATE CASCADE, 
-   CONSTRAINT fk_segment1 FOREIGN KEY (segment1_id) REFERENCES public.primitives(primitive_id) ON DELETE CASCADE ON UPDATE CASCADE, 
-   CONSTRAINT fk_segment2 FOREIGN KEY (segment2_id) REFERENCES public.primitives(primitive_id) ON DELETE CASCADE ON UPDATE CASCADE 
-);
+CREATE OR REPLACE FUNCTION update_plane_basis()
+RETURNS TRIGGER AS $$
+BEGIN
+   IF NEW.segment1_iD IS DISTINCT FROM OLD.segment1_iD OR NEW.segment2_iD IS DISTINCT FROM OLD.segment2_iD THEN
+       SELECT
+           p.vector1_x, p.vector1_y INTO NEW.vector1_x, NEW.vector1_y
+       FROM primitives p WHERE p.primitive_iD = NEW.segment1_iD;
+
+       SELECT
+           p.vector1_x, p.vector1_y INTO NEW.vector2_x, NEW.vector2_y
+       FROM primitives p WHERE p.primitive_iD = NEW.segment2_iD;
+
+       RETURN NEW;
+   END IF;
+
+   RETURN OLD;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER before_plane_update
+BEFORE UPDATE OF segment1_iD, segment2_iD
+ON planes
+FOR EACH ROW
+EXECUTE FUNCTION update_plane_basis();
 
 CREATE OR REPLACE FUNCTION handle_plane_basis_deletion()
 RETURNS TRIGGER AS $$
@@ -140,7 +162,7 @@ BEGIN
        UPDATE planes SET point_reference = NULL WHERE point_reference = OLD.object_id;
 
        IF NOT EXISTS (SELECT 1 FROM planes WHERE point_reference = OLD.object_id) THEN
-           DELETE FROM objects WHERE object_type_iD = 2 AND object_iD <> OLD.object_iD;
+           DELETE FROM objects WHERE object_type_id = 2 AND object_id <> OLD.object_id;
        END IF;
    END IF;
 
@@ -149,19 +171,19 @@ END;
 $$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER before_object_delete 
-BEFORE DELETE ON objects 
-FOR EACH ROW 
+CREATE TRIGGER before_object_delete
+BEFORE DELETE ON objects
+FOR EACH ROW
 EXECUTE FUNCTION handle_plane_basis_deletion();
 
-INSERT INTO "object_types" ("object_type.id", "name", "degrees_of_freedom") VALUES 
+INSERT INTO "object_types" ("object_type.id", "name", "degrees_of_freedom") VALUES
 (1, 'Point', 2),
 (2, 'Segment', 4),
 (3, 'Circle', 3),
 (4, 'Arc', 5)
 ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO "constraint_types" ("constraint_type.id", "name", "is_parametric") VALUES 
+INSERT INTO "constraint_types" ("constraint_type.id", "name", "is_parametric") VALUES
 (0, 'Fixed', false),
 (1, 'Equal', false),
 (2, 'Vertical', false),
