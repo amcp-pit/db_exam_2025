@@ -30,14 +30,25 @@ CREATE TABLE IF NOT EXISTS public.plane (
     plane_id INT NOT NULL PRIMARY KEY,
     model_id INT NOT NULL,
     point_id INT NULL,
+
     vector1_x DOUBLE PRECISION NOT NULL,
     vector1_y DOUBLE PRECISION NOT NULL,
     vector1_z DOUBLE PRECISION NOT NULL,
+
     vector2_x DOUBLE PRECISION NOT NULL,
     vector2_y DOUBLE PRECISION NOT NULL,
     vector2_z DOUBLE PRECISION NOT NULL,
-    CONSTRAINT fk_plane_model FOREIGN KEY (model_id) REFERENCES model(model_id) ON DELETE CASCADE ON UPDATE CASCADE
+
+    FOREIGN KEY (model_id) REFERENCES model(model_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_vectors_normalized CHECK (
+        (vector1_x * vector1_x + vector1_y * vector1_y + vector1_z * vector1_z = 1) AND
+        (vector2_x * vector2_x + vector2_y * vector2_y + vector2_z * vector2_z = 1)
+    ),
+    CONSTRAINT chk_vectors_orthogonal CHECK (
+        (vector1_x * vector2_x + vector1_y * vector2_y + vector1_z * vector2_z = 0)
+    )
 );
+
 
 -- Создание таблицы sketch
 CREATE TABLE IF NOT EXISTS public.sketch (
