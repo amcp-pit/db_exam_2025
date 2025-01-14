@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS public.sketches (
 CREATE TABLE IF NOT EXISTS public.primitives (
     primitive_id SERIAL PRIMARY KEY,
     sketch_id INT NOT NULL,
+    vector1_x DOUBLE PRECISION NOT NULL,
+    vector1_y DOUBLE PRECISION NOT NULL,
     CONSTRAINT fk_primitive_sketch FOREIGN KEY (sketch_id) REFERENCES public.sketches(sketch_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -106,35 +108,60 @@ CREATE TABLE IF NOT EXISTS public.constraint_parameters (
     CONSTRAINT fk_constraint_param_param FOREIGN KEY (parameter_id) REFERENCES public.parameters(parameter_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE OR REPLACE FUNCTION are_segments_orthogonal(segment1_id INT, segment2_id INT)
+RETURNS BOOLEAN AS $$
+DECLARE
+   vector1_x DOUBLE PRECISION;
+   vector1_y DOUBLE PRECISION;
+   vector2_x DOUBLE PRECISION;
+   vector2_y DOUBLE PRECISION;
+BEGIN
+   SELECT vector1_x, vector1_y INTO vector1_x, vector1_y FROM primitives WHERE primitive_id = segment1_id;
+   SELECT vector1_x, vector1_y INTO vector2_x, vector2_y FROM primitives WHERE primitive_id = segment2_id;
+
+   RETURN (vector1_x * vector2_x + vector1_y * vector2_y = 0);
+END;
+$$
+ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS public.plane_bases (
+   plane_id INT NOT NULL PRIMARY KEY, 
+   segment1_id INT NOT NULL, 
+   segment2_id INT NOT NULL, 
+   CONSTRAINT fk_plane FOREIGN KEY (plane_id) REFERENCES public.planes(plane_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+   CONSTRAINT fk_segment1 FOREIGN KEY (segment1_id) REFERENCES public.primitives(primitive_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+   CONSTRAINT fk_segment2 FOREIGN KEY (segment2_id) REFERENCES public.primitives(primitive_id) ON DELETE CASCADE ON UPDATE CASCADE 
+);
+
 CREATE OR REPLACE FUNCTION handle_plane_basis_deletion()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM planes WHERE point_reference = OLD.object_id) THEN
-        UPDATE planes SET point_reference = NULL WHERE point_reference = OLD.object_id;
+   IF EXISTS (SELECT 1 FROM planes WHERE point_reference = OLD.object_id) THEN
+       UPDATE planes SET point_reference = NULL WHERE point_reference = OLD.object_id;
 
-        IF NOT EXISTS (SELECT 1 FROM planes WHERE point_reference = OLD.object_id) THEN
-            DELETE FROM objects WHERE object_type_id = 2 AND object_id <> OLD.object_id;
-        END IF;
-    END IF;
+       IF NOT EXISTS (SELECT 1 FROM planes WHERE point_reference = OLD.object_id) THEN
+           DELETE FROM objects WHERE object_type_iD = 2 AND object_iD <> OLD.object_iD;
+       END IF;
+   END IF;
 
-    RETURN OLD;
-    END;
+   RETURN OLD;
+END;
 $$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER before_object_delete
-BEFORE DELETE ON objects
-FOR EACH ROW
+CREATE TRIGGER before_object_delete 
+BEFORE DELETE ON objects 
+FOR EACH ROW 
 EXECUTE FUNCTION handle_plane_basis_deletion();
 
-INSERT INTO "object_types" ("object_type.id", "name", "degrees_of_freedom") VALUES
+INSERT INTO "object_types" ("object_type.id", "name", "degrees_of_freedom") VALUES 
 (1, 'Point', 2),
 (2, 'Segment', 4),
 (3, 'Circle', 3),
-(4, 'Arc', 5);
+(4, 'Arc', 5)
 ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO "constraint_types" ("constraint_type.id", "name", "is_parametric") VALUES
+INSERT INTO "constraint_types" ("constraint_type.id", "name", "is_parametric") VALUES 
 (0, 'Fixed', false),
 (1, 'Equal', false),
 (2, 'Vertical', false),
@@ -150,7 +177,7 @@ INSERT INTO "constraint_types" ("constraint_type.id", "name", "is_parametric") V
 (12, 'Arcbase', false),
 (13, 'Distance', true),
 (14, 'Angle', true),
-(15, 'Dimension', true);
+(15, 'Dimension', true)
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO "users" (username) VALUES ('user1'), ('user2');
