@@ -27,7 +27,7 @@ CREATE TABLE objects (
 
 CREATE TABLE entities (
     id SERIAL PRIMARY KEY,
-    type_id INT NOT NULL REFERENCES objects(id) ON DELETE CASCADE
+    object_id INT NOT NULL REFERENCES objects(id) ON DELETE CASCADE
 );
 
 CREATE TABLE params (
@@ -37,30 +37,24 @@ CREATE TABLE params (
     value FLOAT NOT NULL
 );
 
+
 CREATE TABLE constraint_types (
     id SERIAL PRIMARY KEY,
-    name varchar(15) NOT NULL
+    name VARCHAR(15) NOT NULL
 );
 
 CREATE TABLE constraints (
     id SERIAL PRIMARY KEY,
     constraint_type_id INT NOT NULL REFERENCES constraint_types(id) ON DELETE CASCADE,
-    first_object_id INT NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
-    second_object_id INT REFERENCES entities(id) ON DELETE CASCADE, 
+    fitst_entity_id INT NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+    second_entity_id INT REFERENCES entities(id) ON DELETE CASCADE, 
     value FLOAT
-);
-
-CREATE TABLE planes (
-    id SERIAL PRIMARY KEY,
-    point_id INT REFERENCES entities(id) ON DELETE RESTRICT, 
-    vector_x_id INT NOT NULL REFERENCES entities(id) ON DELETE RESTRICT,
-    vector_y_id INT NOT NULL REFERENCES entities(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE sketches (
     id SERIAL PRIMARY KEY,
     model_id INT NOT NULL REFERENCES models(id) ON DELETE CASCADE,
-    plane_id INT NOT NULL REFERENCES planes(id) ON DELETE CASCADE
+    entity_id INT NOT NULL REFERENCES entities(id) ON DELETE CASCADE
 );
 
 CREATE TABLE entity_sketch_relations (
