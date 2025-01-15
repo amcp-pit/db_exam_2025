@@ -1,3 +1,7 @@
+# Схема базы данных
+
+![image](https://github.com/user-attachments/assets/c7226254-a4ac-4b74-99de-6d3574289a09)
+
 # Тестовая база данных для реляционных запросов
 
 1. db_diagram.svg - схема БД
