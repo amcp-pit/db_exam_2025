@@ -1,0 +1,112 @@
+<modeling3>
+<users>
+      <user id='i1' name='John'/>
+      <user id='i2' name='Jane'/>
+      <user id='i3' name='Jill'/>
+      <user id='i4' name='Jake'/>      
+</users>
+<models>
+   <model id='i101' updatedAt='2016-01-08T15:16:44.554'>
+      <createdBy idref='i1'/>
+      <lastEditedBy idref='i1'/>
+      <access_list>
+         <user idref='i1' can='modify'/>
+         <user idref='i2' can='read'/>
+      </access_list>
+      <plane id='i201'>
+         <basisvec x='1' y='0' z='0'/>
+         <basisvec x='0' y='1' z='0'/>
+      </plane>
+      <sketch id='i301'>
+         <plane idref='i201'/>
+         <objects>
+            <point id='i401' x='0.0' y='1.0'/>
+            <point id='i402' x='1.0' y='0.0'/>
+            <point id='i403' x='2.0' y='1.0'/>
+            <point id='i404' x='1.0' y='2.0'/>
+            <segment id='i405'>
+                 <point idref='i403'/>
+                 <point idref='i404'/>
+            </segment>
+            <segment id='i406'>
+                 <point idref='i402'/>
+                 <point idref='i404'/>
+            </segment>
+            <point id='i407' x='1.0' y='1.0'/>
+            <point id='i408' x='3.0' y='1.0'/>
+            <point id='i409' x='1.0' y='-1.0'/>
+            <point id='i410' x='3.0' y='-1.0'/>
+            <segment id='i411'>
+                 <point idref='i407'/>
+                 <point idref='i409'/>
+            </segment>
+            <segment id='i412'>
+                 <point idref='i408'/>
+                 <point idref='i410'/>
+            </segment>
+            <circle id='i413' radius='1.0'>
+               <point idref='i401'/>
+            </circle>
+            <point id='i414' x='1.0' y='3.0'/>            
+         </objects>
+         <constraints>
+            <constraint id='i501' type='parallel' >
+               <obj idref='i411'/>
+               <obj idref='i412'/>
+            </constraint>
+            <constraint id='i502' type='coincident'>
+               <obj idref='i414'/>
+               <obj idref='i406'/>
+            </constraint>
+         </constraints>
+      </sketch>
+      <plane id='i202'>
+         <basisvec x='1.0' y='0.0' z='0.0'/>
+         <basisvec x='0.0' y='0.0' z='1.0'/>
+      </plane>
+      <sketch id='i302'>
+         <plane idref='i202'/>
+         <objects>
+            <point id='i421' x='1.0' y='1.0'/>
+            <point id='i422' x='1.0' y='0.0'/>
+            <point id='i423' x='2.0' y='1.0'/>
+            <point id='i424' x='1.0' y='2.0'/>
+            <segment id='i425'>
+                 <point idref='i421'/>
+                 <point idref='i424'/>
+            </segment>
+            <segment id='i426'>
+                 <point idref='i422'/>
+                 <point idref='i424'/>
+            </segment>
+            <point id='i427' x='1.0' y='1.0'/>
+            <point id='i428' x='3.0' y='1.0'/>
+            <point id='i429' x='3.0' y='-1.0'/>
+            <point id='i430' x='5.0' y='1.0'/>
+            <arc id='i431'>
+                 <point idref='i428'/>
+                 <point idref='i427'/>
+                 <point idref='i429'/>
+            </arc>
+            <point id='i432' x='-3.0' y='1.0'/>            
+            <segment id='i433'>
+                 <point idref='i430'/>
+                 <point idref='i432'/>
+            </segment>
+            <point id='i434' x='-1.0' y='3.0'/>            
+         </objects>
+         <constraints>
+            <constraint id='i503' type='coincident' >
+               <obj idref='i431'/>
+               <obj idref='i430'/>
+            </constraint>
+            <constraint id='i504' type='horizontal'>
+               <obj idref='i433'/>
+            </constraint>
+         </constraints>
+      </sketch>
+   </model>
+   <model id='i102'>
+   </model>
+</models>
+</modeling3>
