@@ -1,8 +1,5 @@
 # Схема базы данных
 
-
-![SVG Image](https://github.com/Canis1219/db_exam_2025/blob/main/db_diagram.svg)
-
 # Тестовая база данных для реляционных запросов
 
 1. db_diagram.svg - схема БД
