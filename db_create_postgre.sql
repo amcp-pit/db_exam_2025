@@ -50,6 +50,10 @@ CREATE TABLE IF NOT EXISTS public.primitives (
     sketch_id INT NOT NULL,
     vector1_x DOUBLE PRECISION NOT NULL,
     vector1_y DOUBLE PRECISION NOT NULL,
+    vector1_z DOUBLE PRECISION NOT NULL,
+    vector2_x DOUBLE PRECISION NOT NULL,
+    vector2_y DOUBLE PRECISION NOT NULL,
+    vector2_z DOUBLE PRECISION NOT NULL,
     CONSTRAINT fk_primitive_sketch FOREIGN KEY (sketch_id) REFERENCES public.sketches(sketch_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -129,17 +133,24 @@ END;
 $$
 LANGUAGE plpgsql;
 
+
 CREATE OR REPLACE FUNCTION update_plane_basis()
 RETURNS TRIGGER AS $$
 BEGIN
-   IF NEW.segment1_iD IS DISTINCT FROM OLD.segment1_iD OR NEW.segment2_iD IS DISTINCT FROM OLD.segment2_iD THEN
+   IF NEW.segment1_id IS DISTINCT FROM OLD.segment1_id OR NEW.segment2_id IS DISTINCT FROM OLD.segment2_id THEN
        SELECT
-           p.vector1_x, p.vector1_y INTO NEW.vector1_x, NEW.vector1_y
-       FROM primitives p WHERE p.primitive_iD = NEW.segment1_iD;
+           p.vector1_x / sqrt(p.vector1_x^2 + p.vector1_y^2 + p.vector1_z^2),
+           p.vector1_y / sqrt(p.vector1_x^2 + p.vector1_y^2 + p.vector1_z^2),
+           p.vector1_z / sqrt(p.vector1_x^2 + p.vector1_y^2 + p.vector1_z^2)
+       INTO NEW.vector1_x, NEW.vector1_y, NEW.vector1_z
+       FROM primitives p WHERE p.primitive_id = NEW.segment1_id;
 
-       SELECT
-           p.vector1_x, p.vector1_y INTO NEW.vector2_x, NEW.vector2_y
-       FROM primitives p WHERE p.primitive_iD = NEW.segment2_iD;
+       SELECT 
+           p.vector2_x / sqrt(p.vector2_x^2 + p.vector2_y^2 + p.vector2_z^2),
+           p.vector2_y / sqrt(p.vector2_x^2 + p.vector2_y^2 + p.vector2_z^2),
+           p.vector2_z / sqrt(p.vector2_x^2 + p.vector2_y^2 + p.vector2_z^2)
+       INTO NEW.vector2_x, NEW.vector2_y, NEW.vector2_z
+       FROM primitives p WHERE p.primitive_id = NEW.segment2_id;
 
        RETURN NEW;
    END IF;
@@ -150,7 +161,7 @@ $$
 LANGUAGE plpgsql;
 
 CREATE TRIGGER before_plane_update
-BEFORE UPDATE OF segment1_iD, segment2_iD
+BEFORE UPDATE OF segment1_id, segment2_id
 ON planes
 FOR EACH ROW
 EXECUTE FUNCTION update_plane_basis();
