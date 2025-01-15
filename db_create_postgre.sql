@@ -34,7 +34,7 @@ CREATE TABLE params (
     id SERIAL PRIMARY KEY,
     entity_id INT NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
     name VARCHAR(10),
-    value FLOAT NOT NULL
+    value FLOAT NOT NULL CHECK (value >= 0)
 );
 
 
